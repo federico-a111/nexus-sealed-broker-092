@@ -1,0 +1,119 @@
+name: 092 synthetic one-case reveal
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  reveal:
+    name: Reveal one synthetic case
+    runs-on: ubuntu-latest
+
+    environment:
+      name: sealed-core-synthetic
+
+    env:
+      SYNTHETIC_MASTER_SEED: ${{ secrets.SYNTHETIC_MASTER_SEED }}
+      EXPECTED_MERKLE_ROOT: 923ae82fc7b46e8202c674f7f62e3f36aec7bab93850560ea331c16260678396
+      REVEAL_INDEX: "15"
+
+    steps:
+      - name: Checkout public harness
+        uses: actions/checkout@v4
+
+      - name: Reveal selected synthetic case
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          test -f harness/generator.js
+
+          node harness/generator.js reveal "$REVEAL_INDEX" > reveal.json
+
+          node - <<'NODE'
+          const fs = require('fs');
+          const crypto = require('crypto');
+
+          const x = JSON.parse(fs.readFileSync('reveal.json', 'utf8'));
+
+          function canonical(value) {
+            if (Array.isArray(value)) {
+              return `[${value.map(canonical).join(',')}]`;
+            }
+
+            if (value && typeof value === 'object') {
+              return `{${Object.keys(value)
+                .sort()
+                .map(k => `${JSON.stringify(k)}:${canonical(value[k])}`)
+                .join(',')}}`;
+            }
+
+            return JSON.stringify(value);
+          }
+
+          function sha256(value) {
+            return crypto
+              .createHash('sha256')
+              .update(Buffer.from(String(value), 'utf8'))
+              .digest('hex');
+          }
+
+          const expectedIndex = Number(process.env.REVEAL_INDEX);
+          const expectedRoot = process.env.EXPECTED_MERKLE_ROOT;
+
+          if (x.revealed_index !== expectedIndex) {
+            throw new Error('Unexpected reveal index');
+          }
+
+          if (x.merkle_root !== expectedRoot) {
+            throw new Error('Merkle root mismatch');
+          }
+
+          if (x.inclusion_proof_verified !== true) {
+            throw new Error('Merkle inclusion proof failed');
+          }
+
+          if (!x.subject_packet || !x.commitment || !x.manifest) {
+            throw new Error('Incomplete reveal payload');
+          }
+
+          const packetHash = sha256(canonical(x.subject_packet));
+
+          if (packetHash !== x.commitment.packet_sha256) {
+            throw new Error('Subject packet hash mismatch');
+          }
+
+          if (packetHash !== x.manifest.packet_sha256) {
+            throw new Error('Manifest packet hash mismatch');
+          }
+
+          const serialized = JSON.stringify(x);
+
+          if (serialized.includes('answer_record_id')) {
+            throw new Error('Oracle plaintext leak detected');
+          }
+
+          if (serialized.includes('SYNTHETIC_MASTER_SEED')) {
+            throw new Error('Seed identifier leak detected');
+          }
+
+          console.log(JSON.stringify({
+            protocol: x.protocol,
+            revealed_index: x.revealed_index,
+            case_id: x.case_id,
+            merkle_root: x.merkle_root,
+            packet_sha256: packetHash,
+            inclusion_proof_verified: x.inclusion_proof_verified,
+            oracle_plaintext_exposed: x.oracle_plaintext_exposed
+          }, null, 2));
+          NODE
+
+      - name: Upload one-case reveal
+        uses: actions/upload-artifact@v4
+        with:
+          name: synthetic-one-case-reveal
+          path: reveal.json
+          if-no-files-found: error
+          retention-days: 7
