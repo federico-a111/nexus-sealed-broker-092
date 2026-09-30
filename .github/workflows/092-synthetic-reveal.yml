@@ -1,4 +1,4 @@
-name: 092 synthetic one-case reveal
+name: 092B synthetic one-case reveal
 
 on:
   workflow_dispatch:
@@ -8,7 +8,7 @@ permissions:
 
 jobs:
   reveal:
-    name: Reveal one synthetic case
+    name: Reveal one corrected synthetic case
     runs-on: ubuntu-latest
 
     environment:
@@ -16,14 +16,14 @@ jobs:
 
     env:
       SYNTHETIC_MASTER_SEED: ${{ secrets.SYNTHETIC_MASTER_SEED }}
-      EXPECTED_MERKLE_ROOT: 923ae82fc7b46e8202c674f7f62e3f36aec7bab93850560ea331c16260678396
+      EXPECTED_MERKLE_ROOT: 3dab1afd26891db6088f2ad374fd295e28b7df0519987d534a90e53eb57087fa
       REVEAL_INDEX: "15"
 
     steps:
       - name: Checkout public harness
         uses: actions/checkout@v4
 
-      - name: Reveal selected synthetic case
+      - name: Reveal selected corrected synthetic case
         shell: bash
         run: |
           set -euo pipefail
@@ -63,6 +63,10 @@ jobs:
           const expectedIndex = Number(process.env.REVEAL_INDEX);
           const expectedRoot = process.env.EXPECTED_MERKLE_ROOT;
 
+          if (x.protocol !== '092B-SYNTHETIC-SEALED-CORE') {
+            throw new Error('Unexpected protocol');
+          }
+
           if (x.revealed_index !== expectedIndex) {
             throw new Error('Unexpected reveal index');
           }
@@ -89,14 +93,26 @@ jobs:
             throw new Error('Manifest packet hash mismatch');
           }
 
+          if (!/^[0-9a-f]{64}$/.test(x.commitment.oracle_commitment_sha256 || '')) {
+            throw new Error('Missing or invalid oracle commitment');
+          }
+
           const serialized = JSON.stringify(x);
 
           if (serialized.includes('answer_record_id')) {
             throw new Error('Oracle plaintext leak detected');
           }
 
+          if (serialized.includes('oracle_salt_hex')) {
+            throw new Error('Oracle salt leak detected');
+          }
+
           if (serialized.includes('SYNTHETIC_MASTER_SEED')) {
-            throw new Error('Seed identifier leak detected');
+            throw new Error('Master value identifier leak detected');
+          }
+
+          if (x.oracle_plaintext_exposed !== false || x.oracle_salt_exposed !== false) {
+            throw new Error('Exposure flags invalid');
           }
 
           console.log(JSON.stringify({
@@ -106,14 +122,15 @@ jobs:
             merkle_root: x.merkle_root,
             packet_sha256: packetHash,
             inclusion_proof_verified: x.inclusion_proof_verified,
-            oracle_plaintext_exposed: x.oracle_plaintext_exposed
+            oracle_plaintext_exposed: x.oracle_plaintext_exposed,
+            oracle_salt_exposed: x.oracle_salt_exposed
           }, null, 2));
           NODE
 
-      - name: Upload one-case reveal
+      - name: Upload corrected one-case reveal
         uses: actions/upload-artifact@v4
         with:
-          name: synthetic-one-case-reveal
+          name: 092B-synthetic-one-case-reveal
           path: reveal.json
           if-no-files-found: error
           retention-days: 7
