@@ -1,0 +1,67 @@
+name: 092 synthetic sealed-core freeze
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  freeze:
+    name: Freeze synthetic commitments
+    runs-on: ubuntu-latest
+
+    environment:
+      name: sealed-core-synthetic
+
+    env:
+      SYNTHETIC_MASTER_SEED: ${{ secrets.SYNTHETIC_MASTER_SEED }}
+
+    steps:
+      - name: Checkout public harness
+        uses: actions/checkout@v4
+
+      - name: Generate synthetic bank commitments
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          test -f harness/generator.js
+
+          node harness/generator.js freeze > freeze.json
+
+          node -e "
+          const fs = require('fs');
+          const x = JSON.parse(fs.readFileSync('freeze.json', 'utf8'));
+
+          if (x.bank_size !== 32) {
+            throw new Error('Expected bank_size=32');
+          }
+
+          if (x.total_manifests !== 192) {
+            throw new Error('Expected total_manifests=192');
+          }
+
+          if (!/^[0-9a-f]{64}$/.test(x.merkle_root)) {
+            throw new Error('Invalid Merkle root');
+          }
+
+          if (JSON.stringify(x).includes('answer_record_id')) {
+            throw new Error('Oracle plaintext leak detected');
+          }
+
+          console.log(JSON.stringify({
+            protocol: x.protocol,
+            bank_size: x.bank_size,
+            total_manifests: x.total_manifests,
+            merkle_root: x.merkle_root
+          }, null, 2));
+          "
+
+      - name: Upload synthetic freeze receipt
+        uses: actions/upload-artifact@v4
+        with:
+          name: synthetic-freeze-receipt
+          path: freeze.json
+          if-no-files-found: error
+          retention-days: 7
