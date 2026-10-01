@@ -1,0 +1,44 @@
+name: 093C production freeze
+on:
+  workflow_dispatch:
+    inputs:
+      authorization_ref:
+        description: First-bank authorization comment 5936862387
+        required: true
+        type: string
+permissions:
+  contents: write
+concurrency:
+  group: 093c-production-broker-${{ github.repository }}
+  cancel-in-progress: false
+jobs:
+  execute:
+    if: github.repository == 'federico-a111/nexus-sealed-broker-092' && github.actor == 'federico-a111'
+    runs-on: ubuntu-latest
+    environment:
+      name: sealed-core-synthetic
+    steps:
+      - name: Checkout installed byte-identical package
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - name: Verify frozen package before accessing the master
+        env:
+          ACTIVATION_093C_MODE: PRODUCTION
+        run: node production-093c/driver.js verify-package
+      - name: Execute precommitted broker operation
+        env:
+          ACTIVATION_093C_MODE: PRODUCTION
+          BROKER_PROTECTED_ENVIRONMENT: sealed-core-synthetic
+          STAGE1_V2_PRODUCTION_MASTER_HEX: ${{ secrets.STAGE1_V2_PRODUCTION_MASTER_HEX }}
+          SYNTHETIC_MASTER_SEED: ${{ secrets.SYNTHETIC_MASTER_SEED }}
+          GITHUB_TOKEN: ${{ github.token }}
+        run: node production-093c/driver.js freeze
+      - name: Upload only the fixed authorized public surface
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: 093c-production-freeze-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/093c-public/
+          if-no-files-found: error
+          retention-days: 30

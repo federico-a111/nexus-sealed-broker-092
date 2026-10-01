@@ -1,0 +1,41 @@
+{
+  "093a_commit": "50fa0bd7604614b9c097627460bcb1245b94a820",
+  "092b_blob": "c27e4f80bf78d5ead7ad07c148afd50a1e2deff1",
+  "files": [
+    {
+      "path": "frozen-093a/schema.js",
+      "blob": "bc3ad58f93c6654bd04e97c79c5ea64c2538d049",
+      "sha256": "2e0835bf41f6f81b105f3d93fed678f70b372ae5f3084221010c29c40c5b4167"
+    },
+    {
+      "path": "frozen-093a/primitives.js",
+      "blob": "29819491fe773c990c4658880e5390c7ace9282c",
+      "sha256": "5103b75c582698a3364c10c1c87dce2d1a1cd6e7d547a88a6af68bc10046ca72"
+    },
+    {
+      "path": "frozen-093a/generator.js",
+      "blob": "ccbf2461a241809821ec93f2ef513ea5535f0805",
+      "sha256": "b25d928fafd853edf913f521f821a05798291d2529d19a7ed338fbbef9244f0b"
+    },
+    {
+      "path": "frozen-093a/validator.js",
+      "blob": "b0f57faf50b96c167a349732f561fff2ccc9787a",
+      "sha256": "dccbba551c19d52e63b96728be9a22326c392909bcefacffeed9243d21bcb2a3"
+    },
+    {
+      "path": "frozen-093a/dev-subject.js",
+      "blob": "ef1bd2750d3b28de9dca438b81781c9dcf071660",
+      "sha256": "3bd1003b21c1ff6d4871307967d4ae8fcf9f17644ec0a26d860c4af6800dfee6"
+    },
+    {
+      "path": "frozen-093a/proof.js",
+      "blob": "ddb13d7ffdb8fc005c2829c9fb508d24176cab33",
+      "sha256": "8683777956c466f18bf46889a6434ac8036b43d7b13d65bb66333837ef568c9f"
+    },
+    {
+      "path": "frozen-092b.js",
+      "sha256": "81abcaba8d62780472fcf4fae69f86e4cce24b8addf9c033bb2937cf17b47663",
+      "blob": "c27e4f80bf78d5ead7ad07c148afd50a1e2deff1"
+    }
+  ]
+}

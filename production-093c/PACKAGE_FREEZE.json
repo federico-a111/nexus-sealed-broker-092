@@ -1,0 +1,131 @@
+{
+  "identity": "093C-PACKAGE-FREEZE-V1",
+  "authority_ref": "5936862387",
+  "frozen_093a_commit": "50fa0bd7604614b9c097627460bcb1245b94a820",
+  "files": [
+    {
+      "path": ".github/workflows/093c-freeze.yml",
+      "sha256": "03456d991d81fec80baf77a360a7f4eb5f088fa21eec92ff1993028ba0b02efe",
+      "blob": "de39e68288f459321372eb6d9ee9935ffaa6b479"
+    },
+    {
+      "path": ".github/workflows/093c-grade.yml",
+      "sha256": "7c4525715de0da23d35a2ad9136289ae939b4c706538be5706babb8e7777858a",
+      "blob": "5444c473e7b3eed7c57c5179b08c58e227dc7f2a"
+    },
+    {
+      "path": ".github/workflows/093c-open-oracle.yml",
+      "sha256": "3d976fac310935dcfce8b37b7fb12485a08d10b8331ceb1e239cd654e4358b78",
+      "blob": "4cfdf970b3e79b1097f5523fc7d092cb5bc99ad8"
+    },
+    {
+      "path": ".github/workflows/093c-reveal.yml",
+      "sha256": "e2b9145a945472085e679526e24f20b19ae7052e89a69bfdc8f71681399e19fb",
+      "blob": "ed3d84c9894c874ca4d8a173f52325c14e6f91a2"
+    },
+    {
+      "path": "production-093c/ACTIVATION.md",
+      "sha256": "d34c7dc9e737648b928623ca1d8fa08767ec0b46ad942d5c6a7ee2ecde88d897",
+      "blob": "b84062909bf0c13fb508c91762711c0f3b8ab75b"
+    },
+    {
+      "path": "production-093c/PINNED_INPUTS.json",
+      "sha256": "9d5ecf1ceb784895faa243af2eaa49f45b248225dea89e0d2449c13f6eb8b780",
+      "blob": "00169df24b1ee97842dcbbe5d9cf0829a6513847"
+    },
+    {
+      "path": "production-093c/broker.js",
+      "sha256": "f0fa6575d97b921a5b9e5039b478043716198e9bff9af12f36bed55ca6db3dc9",
+      "blob": "56d95f702201fd3c2b235ef6c9cd85a558e02e19"
+    },
+    {
+      "path": "production-093c/context.js",
+      "sha256": "ce02e48271122c44542dc6d3ced73d9ca2588afe931e19c9c2d5b622e7314739",
+      "blob": "3ceaa910ca530fb6c56d3b3849e79f6e6f2df715"
+    },
+    {
+      "path": "production-093c/dev-subject.js",
+      "sha256": "ba2168f86afe2df625b4ff40723abdbb795a97dc31be3e96f00de59fc8958cfe",
+      "blob": "edd5e705713fec152857c3b19d4ccc33bc3b49b8"
+    },
+    {
+      "path": "production-093c/driver.js",
+      "sha256": "378d3b759fbcf292e26aa45415dc5531a7739b8336f71bf9d343bc078e35bb0d",
+      "blob": "06b5cd995a41166ece211814b35b277e61f8673d"
+    },
+    {
+      "path": "production-093c/frozen-092b.js",
+      "sha256": "81abcaba8d62780472fcf4fae69f86e4cce24b8addf9c033bb2937cf17b47663",
+      "blob": "c27e4f80bf78d5ead7ad07c148afd50a1e2deff1"
+    },
+    {
+      "path": "production-093c/frozen-093a/dev-subject.js",
+      "sha256": "3bd1003b21c1ff6d4871307967d4ae8fcf9f17644ec0a26d860c4af6800dfee6",
+      "blob": "ef1bd2750d3b28de9dca438b81781c9dcf071660"
+    },
+    {
+      "path": "production-093c/frozen-093a/generator.js",
+      "sha256": "b25d928fafd853edf913f521f821a05798291d2529d19a7ed338fbbef9244f0b",
+      "blob": "ccbf2461a241809821ec93f2ef513ea5535f0805"
+    },
+    {
+      "path": "production-093c/frozen-093a/primitives.js",
+      "sha256": "5103b75c582698a3364c10c1c87dce2d1a1cd6e7d547a88a6af68bc10046ca72",
+      "blob": "29819491fe773c990c4658880e5390c7ace9282c"
+    },
+    {
+      "path": "production-093c/frozen-093a/proof.js",
+      "sha256": "8683777956c466f18bf46889a6434ac8036b43d7b13d65bb66333837ef568c9f",
+      "blob": "ddb13d7ffdb8fc005c2829c9fb508d24176cab33"
+    },
+    {
+      "path": "production-093c/frozen-093a/schema.js",
+      "sha256": "2e0835bf41f6f81b105f3d93fed678f70b372ae5f3084221010c29c40c5b4167",
+      "blob": "bc3ad58f93c6654bd04e97c79c5ea64c2538d049"
+    },
+    {
+      "path": "production-093c/frozen-093a/validator.js",
+      "sha256": "dccbba551c19d52e63b96728be9a22326c392909bcefacffeed9243d21bcb2a3",
+      "blob": "b0f57faf50b96c167a349732f561fff2ccc9787a"
+    },
+    {
+      "path": "production-093c/generator.js",
+      "sha256": "ef3d26aea74200ed28be62d3dec51573806716c3542ada8628698fb191a2fae1",
+      "blob": "e65153f7e35164ccfe1c681e727cc4243f26c9ee"
+    },
+    {
+      "path": "production-093c/policy.json",
+      "sha256": "fb8b01c8bf5d76d4803a6ef20c55d3a9ad0ba49bd3dfdacb0804489ec55e4e63",
+      "blob": "d626debd41db2bae10666a4419657dd80c477641"
+    },
+    {
+      "path": "production-093c/preflight.js",
+      "sha256": "710d495eebd3091fc2f5125eb5ed1b6f4210e82b201bb911b044c9889a043b21",
+      "blob": "f6e841a6fff9b5d9cb053a6c13ed5703b05dc827"
+    },
+    {
+      "path": "production-093c/primitives.js",
+      "sha256": "5103b75c582698a3364c10c1c87dce2d1a1cd6e7d547a88a6af68bc10046ca72",
+      "blob": "29819491fe773c990c4658880e5390c7ace9282c"
+    },
+    {
+      "path": "production-093c/proof.js",
+      "sha256": "c4bce11d82b839e360a81aa13c2890055e34f369a95a97861c058d2549e04316",
+      "blob": "136d5af8d04ed553fcce418c472ea82bb7888a15"
+    },
+    {
+      "path": "production-093c/schema.js",
+      "sha256": "c0572d42b92fbbc68de6f1e83702cc2fe2024ee4c465b4f835865d3f2ce00452",
+      "blob": "280b30a84250b8727b9580e746038c830366eb9c"
+    },
+    {
+      "path": "production-093c/validator.js",
+      "sha256": "e90a97e3ee596c1245ecfe43cdc40b19cc87e3ea4283d7e08a2acd5dff6f478e",
+      "blob": "ed31e2d65691913a8d57eaa3b22dfd47533e5e35"
+    }
+  ],
+  "install_target": "federico-a111/nexus-sealed-broker-092",
+  "broker_installation_executed": false,
+  "real_heldout_generation": 0,
+  "heldout_subjects_executed": 0
+}
