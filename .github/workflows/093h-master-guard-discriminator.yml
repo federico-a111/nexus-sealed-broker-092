@@ -1,0 +1,105 @@
+name: 093H master-guard discriminator
+
+on:
+  workflow_dispatch:
+    inputs:
+      authorization_ref:
+        description: First-bank authorization comment 5936862387
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  diagnose:
+    if: github.repository == 'federico-a111/nexus-sealed-broker-092' && github.actor == 'federico-a111'
+    runs-on: ubuntu-latest
+    environment:
+      name: sealed-core-synthetic
+    env:
+      BROKER_PROTECTED_ENVIRONMENT: sealed-core-synthetic
+      STAGE1_V2_PRODUCTION_MASTER_HEX: ${{ secrets.STAGE1_V2_PRODUCTION_MASTER_HEX }}
+      SYNTHETIC_MASTER_SEED: ${{ secrets.SYNTHETIC_MASTER_SEED }}
+
+    steps:
+      - name: Discriminate master guard without exposing secrets
+        shell: bash
+        run: |
+          set -euo pipefail
+          node <<'NODE'
+          'use strict';
+
+          const fs = require('node:fs');
+          const crypto = require('node:crypto');
+
+          const EXPECTED_AUTH = '5936862387';
+          const EXPECTED_REPO = 'federico-a111/nexus-sealed-broker-092';
+          const EXPECTED_ACTOR = 'federico-a111';
+          const EXPECTED_ENV = 'sealed-core-synthetic';
+
+          function stop(code) {
+            console.error(`093H_GUARD_FAIL=${code}`);
+            process.exit(1);
+          }
+
+          let event;
+          try {
+            event = JSON.parse(
+              fs.readFileSync(process.env.GITHUB_EVENT_PATH, 'utf8')
+            );
+          } catch {
+            stop('EVENT_READ');
+          }
+
+          const auth = (event.inputs || {}).authorization_ref || '';
+
+          if (process.env.GITHUB_REPOSITORY !== EXPECTED_REPO) {
+            stop('REPOSITORY');
+          }
+
+          if (process.env.GITHUB_ACTOR !== EXPECTED_ACTOR) {
+            stop('ACTOR');
+          }
+
+          if (process.env.BROKER_PROTECTED_ENVIRONMENT !== EXPECTED_ENV) {
+            stop('ENVIRONMENT');
+          }
+
+          if (auth !== EXPECTED_AUTH) {
+            stop('AUTHORIZATION_REF');
+          }
+
+          const prod = process.env.STAGE1_V2_PRODUCTION_MASTER_HEX || '';
+          const syn = process.env.SYNTHETIC_MASTER_SEED || '';
+
+          const prodHex64 = /^[0-9a-fA-F]{64}$/.test(prod);
+          const synHex64 = /^[0-9a-fA-F]{64}$/.test(syn);
+
+          let distinct = 'NOT_EVALUATED';
+
+          if (prodHex64 && synHex64) {
+            distinct = !crypto.timingSafeEqual(
+              Buffer.from(prod, 'hex'),
+              Buffer.from(syn, 'hex')
+            );
+          }
+
+          console.log(`PROD_HEX64=${prodHex64}`);
+          console.log(`SYN_HEX64=${synHex64}`);
+          console.log(`DISTINCT=${distinct}`);
+
+          let terminal;
+
+          if (!prodHex64) {
+            terminal = 'PROD_FORMAT_FAIL';
+          } else if (!synHex64) {
+            terminal = 'SYN_FORMAT_FAIL';
+          } else if (distinct === false) {
+            terminal = 'REUSE_GUARD_FAIL';
+          } else {
+            terminal = 'MASTER_GUARD_COMPONENTS_PASS';
+          }
+
+          console.log(`093H_TERMINAL=${terminal}`);
+          NODE
