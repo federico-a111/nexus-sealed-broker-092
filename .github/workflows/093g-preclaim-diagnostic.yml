@@ -1,0 +1,160 @@
+name: 093G bounded preclaim diagnostic
+
+on:
+  workflow_dispatch:
+    inputs:
+      authorization_ref:
+        description: First-bank authorization comment 5936862387
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+concurrency:
+  group: 093g-preclaim-diagnostic-${{ github.repository }}
+  cancel-in-progress: false
+
+jobs:
+  diagnose:
+    if: github.repository == 'federico-a111/nexus-sealed-broker-092' && github.actor == 'federico-a111'
+    runs-on: ubuntu-latest
+    environment:
+      name: sealed-core-synthetic
+    env:
+      ACTIVATION_093C_MODE: PRODUCTION
+      BROKER_PROTECTED_ENVIRONMENT: sealed-core-synthetic
+      STAGE1_V2_PRODUCTION_MASTER_HEX: ${{ secrets.STAGE1_V2_PRODUCTION_MASTER_HEX }}
+      SYNTHETIC_MASTER_SEED: ${{ secrets.SYNTHETIC_MASTER_SEED }}
+      GITHUB_TOKEN: ${{ github.token }}
+    steps:
+      - name: Checkout broker head without persisted credentials
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+
+      - name: Diagnose only the pre-claim boundary
+        shell: bash
+        run: |
+          set -euo pipefail
+          node <<'NODE'
+          'use strict';
+          const fs = require('node:fs');
+          const path = require('node:path');
+          const B = require('./production-093c/broker');
+
+          const EXPECTED_AUTH = '5936862387';
+          const BROKER = 'federico-a111/nexus-sealed-broker-092';
+          const BANK_ID = 'STAGE1V2-HO-093C-01';
+
+          function fail(stage, status) {
+            const suffix = status === undefined ? '' : ` status=${status}`;
+            console.error(`093G_FAIL stage=${stage}${suffix}`);
+            process.exit(1);
+          }
+
+          function pass(stage) {
+            console.log(`093G_PASS stage=${stage}`);
+          }
+
+          async function main() {
+            let event;
+            try {
+              event = JSON.parse(fs.readFileSync(process.env.GITHUB_EVENT_PATH, 'utf8'));
+            } catch {
+              fail('EVENT_READ');
+            }
+
+            const auth = (event.inputs || {}).authorization_ref || '';
+            if (auth !== EXPECTED_AUTH) fail('EVENT_AUTH_REF');
+            pass('EVENT_AUTH_REF');
+
+            try {
+              B.assertAuthority('freeze', auth);
+            } catch {
+              fail('AUTHORITY_GUARD');
+            }
+            pass('AUTHORITY_GUARD');
+
+            try {
+              B.packageIdentity();
+            } catch {
+              fail('PACKAGE_IDENTITY');
+            }
+            pass('PACKAGE_IDENTITY');
+
+            let master;
+            try {
+              master = B.readMaster();
+            } catch {
+              fail('MASTER_GUARD');
+            }
+            pass('MASTER_GUARD');
+
+            try {
+              B.masterCommitment(master);
+            } catch {
+              fail('MASTER_COMMITMENT_LOCAL');
+            }
+            pass('MASTER_COMMITMENT_LOCAL');
+
+            const privateRoot = path.join(process.env.RUNNER_TEMP, `093g-private-${process.env.GITHUB_RUN_ID}-${process.env.GITHUB_RUN_ATTEMPT}`);
+            const publicRoot = path.join(process.env.RUNNER_TEMP, '093g-public');
+            if (fs.existsSync(privateRoot) || fs.existsSync(publicRoot)) fail('FRESH_RUNNER_ROOT');
+            fs.mkdirSync(publicRoot, { recursive: true });
+            pass('FRESH_RUNNER_ROOT');
+
+            const headers = {
+              Authorization: `Bearer ${process.env.GITHUB_TOKEN}`,
+              Accept: 'application/vnd.github+json',
+              'X-GitHub-Api-Version': '2022-11-28'
+            };
+
+            const claimUrl = `https://api.github.com/repos/${BROKER}/contents/production-freezes/${BANK_ID}/claim.json`;
+            let response;
+            try {
+              response = await fetch(claimUrl, { headers });
+            } catch {
+              fail('CLAIM_GET_TRANSPORT');
+            }
+            if (response.status !== 404) fail('CLAIM_GET_EXPECTED_404', response.status);
+            pass('CLAIM_GET_EXPECTED_404');
+
+            const diagnosticPath = `diagnostics/093g/preclaim-${process.env.GITHUB_RUN_ID}-${process.env.GITHUB_RUN_ATTEMPT}.json`;
+            const diagnosticUrl = `https://api.github.com/repos/${BROKER}/contents/${diagnosticPath.split('/').map(encodeURIComponent).join('/')}`;
+            const marker = {
+              identity: '093G-PRECLAIM-DIAGNOSTIC-V1',
+              run_id: process.env.GITHUB_RUN_ID,
+              run_attempt: process.env.GITHUB_RUN_ATTEMPT,
+              no_heldout_generation: true,
+              secrets_exposed: false,
+              oracle_opened: false,
+              subject_treatment: false
+            };
+            const body = {
+              message: `093G preclaim diagnostic ${process.env.GITHUB_RUN_ID}`,
+              content: Buffer.from(JSON.stringify(marker), 'utf8').toString('base64')
+            };
+
+            try {
+              response = await fetch(diagnosticUrl, { method: 'PUT', headers, body: JSON.stringify(body) });
+            } catch {
+              fail('DIAGNOSTIC_PUT_TRANSPORT');
+            }
+            if (!response.ok) fail('DIAGNOSTIC_PUT', response.status);
+            pass('DIAGNOSTIC_PUT');
+
+            try {
+              response = await fetch(diagnosticUrl, { headers });
+            } catch {
+              fail('DIAGNOSTIC_GET_TRANSPORT');
+            }
+            if (!response.ok) fail('DIAGNOSTIC_GET', response.status);
+            pass('DIAGNOSTIC_GET');
+
+            console.log('093G_TERMINAL PASS_LOCAL_GUARDS_AND_GENERIC_CONTENTS_STORE');
+          }
+
+          main().catch(() => fail('UNCAUGHT'));
+          NODE
